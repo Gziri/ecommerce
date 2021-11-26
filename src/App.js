@@ -1,46 +1,57 @@
-import React from "react";
-import "./App.css";
-import { Routes, Route } from "react-router-dom";
+import React from 'react';
+import { Switch, Route } from 'react-router-dom';
 
-import HomePage from "./pages/homepage/homepage.component";
-import ShopPage from "./pages/shop/shop.component";
-import Header from "./components/header/header.component";
-import SignInAndSIgnUpPage from "./pages/sign-in-and-sign-up/sign-in-and-sign-up.component";
+import './App.css';
 
-import { auth } from "./firebase/firebase.utils";
+import HomePage from './pages/homepage/homepage.component';
+import ShopPage from './pages/shop/shop.component';
+import SignInAndSignUpPage from './pages/sign-in-and-sign-up/sign-in-and-sign-up.component';
+import Header from './components/header/header.component';
+import { auth, createUserProfileDocument } from './firebase/firebase.utils';
 
 class App extends React.Component {
-constructor(props){
-  super(props);
+  constructor() {
+    super();
 
-  this.state={
-    currentUser:null
+    this.state = {
+      currentUser: null
+    };
   }
-}
 
-unsibscribeFromAuth = null;
+  unsubscribeFromAuth = null;
 
-componentDidMount(){
- this.unsibscribeFromAuth= auth.onAuthStateChanged(user=>{
-    this.setState({currentUser: user})
-    console.log(user)
-  })
-}
+  componentDidMount() {
+    this.unsubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
+      if (userAuth) {
+        const userRef = await createUserProfileDocument(userAuth);
 
-componentWillUnmount(){
-  this.unsibscribeFromAuth()
-}
+        userRef.onSnapshot(snapShot => {
+          this.setState({
+            currentUser: {
+              id: snapShot.id,
+              ...snapShot.data()
+            }
+          });
+        });
+      }
+
+      this.setState({ currentUser: userAuth });
+    });
+  }
+
+  componentWillUnmount() {
+    this.unsubscribeFromAuth();
+  }
 
   render() {
     return (
       <div>
         <Header currentUser={this.state.currentUser} />
-        <Routes>
-          <Route exact path="/" element={<HomePage />} />
-          <Route path="/shop" element={<ShopPage />} />
-          <Route path="/signin" element={<SignInAndSIgnUpPage />} />
-        </Routes>
-        <div></div>
+        <Switch>
+          <Route exact path='/' component={HomePage} />
+          <Route path='/shop' component={ShopPage} />
+          <Route path='/signin' component={SignInAndSignUpPage} />
+        </Switch>
       </div>
     );
   }
