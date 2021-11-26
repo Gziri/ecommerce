@@ -1,6 +1,5 @@
-import React from 'react';
-
-import './custom-buttom.styles.scss';
+import React from "react";
+import "./custom-button.styles.scss";
 
 const CustomButton = ({ children, isGoogleSignIn, ...otherProps }) => (
   <button
